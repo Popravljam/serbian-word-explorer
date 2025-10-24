@@ -1,4 +1,4 @@
-# Serbian Word Explorer 🔤
+# Serbian Word Explorer 
 
 A comprehensive web application for exploring Serbian words with detailed morphological information, accent patterns, and frequency data.
 
