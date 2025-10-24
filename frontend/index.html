@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Čovsov rečnik</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .search-box {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 15px 20px;
+            font-size: 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .result-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .result-container.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .word-header {
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .lemma {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .badges {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .badge-pos {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .badge-gender {
+            background: #fce4ec;
+            color: #c2185b;
+        }
+
+        .badge-frequency {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .badge-exists {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .morphology-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .morphology-table th,
+        .morphology-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .morphology-table th:first-child,
+        .morphology-table td:first-child {
+            width: 150px;
+            font-weight: 600;
+        }
+
+        .morphology-table th:nth-child(2),
+        .morphology-table th:nth-child(3),
+        .morphology-table td:nth-child(2),
+        .morphology-table td:nth-child(3) {
+            width: auto;
+        }
+
+        .morphology-table th {
+            background: #f5f5f5;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .morphology-table tr:hover {
+            background: #f9f9f9;
+        }
+
+        .accented-form {
+            font-size: 1.2em;
+            color: #333;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .info-card {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .info-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.3em;
+            color: #333;
+            font-weight: 600;
+        }
+
+        /* Mobile responsive styles */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .subtitle {
+                font-size: 1em;
+            }
+
+            .search-box {
+                padding: 20px;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            input[type="text"],
+            button {
+                width: 100%;
+                font-size: 16px;
+            }
+
+            .result-container {
+                padding: 20px;
+            }
+
+            .lemma {
+                font-size: 1.8em;
+            }
+
+            .morphology-table {
+                font-size: 0.9em;
+            }
+
+            .morphology-table th,
+            .morphology-table td {
+                padding: 8px 4px;
+            }
+
+            .morphology-table th:first-child,
+            .morphology-table td:first-child {
+                width: 100px;
+            }
+
+            .accented-form {
+                font-size: 1em;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-title {
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Čovsov rečnik</h1>
+            <p class="subtitle"><span class="badge" style="background: rgba(255,255,255,0.2); color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.8em;">v1.01</span></p>
+        </header>
+
+        <div class="search-box">
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    id="wordInput" 
+                    placeholder="Unesite reč (npr. škola, čovek, dobar)..."
+                    autocomplete="off"
+                >
+                <button id="searchBtn">Pretraži</button>
+            </div>
+        </div>
+
+        <div id="resultContainer" class="result-container">
+            <!-- Results will be inserted here -->
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

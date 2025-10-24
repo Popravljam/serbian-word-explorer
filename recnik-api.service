@@ -1,0 +1,15 @@
+[Unit]
+Description=Serbian Word Explorer API
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/recnik
+Environment="PATH=/opt/recnik/venv/bin"
+ExecStart=/opt/recnik/venv/bin/python main.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
