@@ -18,6 +18,7 @@ from services.jezik_service import JezikService
 from services.frequency_service import FrequencyService
 from services.wordlist_service import WordlistService
 from services.ipa_service import IPAService
+from services.etymology_service import EtymologyService
 
 app = FastAPI(title="Serbian Word Explorer API")
 
@@ -35,6 +36,7 @@ jezik_service = JezikService()
 frequency_service = FrequencyService()
 wordlist_service = WordlistService()
 ipa_service = IPAService()
+etymology_service = EtymologyService()
 
 
 class WordResponse(BaseModel):
@@ -55,6 +57,8 @@ class WordResponse(BaseModel):
     found_lemma: Optional[str] = None
     form_info: Optional[Dict[str, Any]] = None  # Changed to Any to support both str and List[str]
     variants: Optional[List[Dict[str, Any]]] = None  # Multiple POS interpretations
+    etymology: Optional[str] = None
+    definitions: Optional[List[Dict[str, Any]]] = None
 
 
 @app.get("/")
@@ -86,13 +90,29 @@ def get_word_info(word: str):
     }
     
     # Try to get morphology from jezik
-    # First try the word as-is
-    jezik_data = jezik_service.lookup_word(word)
+    # First try the word as-is (lowercase for consistency)
+    word_lower = word.lower()
+    jezik_data = jezik_service.lookup_word(word_lower)
     
-    # If not found, try to find lemma by searching inflected forms
+    # Check if the searched word matches specific inflected forms
+    # This handles cases like "škola" which is both nom sg AND gen pl
+    if jezik_data:
+        form_matches = jezik_service.find_matching_forms(word_lower, word_lower)
+        if form_matches and len(form_matches) > 0:
+            # Only set form_info if the word is NOT exactly the lemma in nom sg
+            # (to distinguish "škola" the inflected form from "škola" the lemma)
+            if len(form_matches) > 1 or form_matches[0] not in ['sg nom', 'infinitive']:
+                result["searched_form"] = word
+                result["found_lemma"] = word_lower
+                result["form_info"] = {
+                    "labels": form_matches,
+                    "accented_form": jezik_service.get_accented_form(word_lower, form_matches[0])
+                }
+    
+    # If not found as lemma, try to find lemma by searching inflected forms
     # Look for ALL possible interpretations
     if not jezik_data:
-        all_lemmas = jezik_service.find_all_lemmas_by_form(word)
+        all_lemmas = jezik_service.find_all_lemmas_by_form(word_lower)
         if all_lemmas:
             # Use first result as primary
             lemma_result = all_lemmas[0]
@@ -165,6 +185,13 @@ def get_word_info(word: str):
     freq_data = frequency_service.get_frequency(word)
     if freq_data:
         result["frequency"] = freq_data
+    
+    # Get etymology and definitions from Wiktionary
+    lemma_to_lookup = result.get("lemma") or word
+    etym_data = etymology_service.get_word_data(lemma_to_lookup)
+    if etym_data:
+        result["etymology"] = etym_data.get("etymology")
+        result["definitions"] = etym_data.get("definitions")
     
     if not exists and not jezik_data:
         raise HTTPException(status_code=404, detail="Word not found")

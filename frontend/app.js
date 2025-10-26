@@ -122,6 +122,27 @@ function displayResults(data) {
         html += '</div></div>';
     }
     
+    // Etymology (if available)
+    if (data.etymology) {
+        html += '<div class="section">';
+        html += '<div class="section-title">🌍 Etimologija</div>';
+        html += '<div style="background: #f5f5f5; padding: 20px; border-radius: 10px; border-left: 4px solid #667eea;">';
+        html += `<p style="line-height: 1.8; color: #333;">${data.etymology}</p>`;
+        html += '</div></div>';
+    }
+    
+    // Definitions (if available)
+    if (data.definitions && data.definitions.length > 0) {
+        html += '<div class="section">';
+        html += '<div class="section-title">📚 Značenja (iz Vikireč)</div>';
+        html += '<div style="background: #f5f5f5; padding: 20px; border-radius: 10px;">';
+        html += '<ol style="margin: 0; padding-left: 25px; line-height: 2;">';
+        for (const def of data.definitions) {
+            html += `<li style="margin-bottom: 10px;"><span style="color: #666; font-size: 0.9em; text-transform: uppercase; font-weight: 600;">[${def.pos}]</span> ${def.definition}</li>`;
+        }
+        html += '</ol></div></div>';
+    }
+    
     // Morphology table (if available)
     if (data.morphology && Object.keys(data.morphology).length > 0) {
         html += '<div class="section">';
@@ -312,7 +333,9 @@ function cyrillicToLatin(text) {
 
 function buildGrammaticalDescription(data) {
     const word = data.searched_form || data.word;
-    const isInflected = data.searched_form && data.found_lemma;
+    // Check if this is truly an inflected form (lemma different from search)
+    const isInflected = data.searched_form && data.found_lemma && 
+                       (data.searched_form.toLowerCase() !== data.found_lemma.toLowerCase());
     
     // Get accented form - use form_info if available, otherwise from morphology
     let accentedForm = '';
@@ -354,7 +377,7 @@ function buildGrammaticalDescription(data) {
     }
     
     // Specific form info if available
-    if (isInflected && data.form_info) {
+    if (data.form_info && data.form_info.labels) {
         const labels = data.form_info.labels || [data.form_info.label];
         if (labels && labels.length > 0) {
             const formDescs = labels.map(l => parseFormLabel(l)).filter(d => d);
@@ -362,15 +385,18 @@ function buildGrammaticalDescription(data) {
                 if (formDescs.length === 1) {
                     parts.push(`u <strong>${formDescs[0]}</strong>`);
                 } else {
-                    // Multiple forms (e.g., "genitivu ili akuzativu")
+                    // Multiple forms (e.g., "genitivu ili akuzativu" or "nominativu jednine ili genitivu množine")
                     const lastForm = formDescs.pop();
                     parts.push(`u <strong>${formDescs.join(', ')} ili ${lastForm}</strong>`);
                 }
             }
         }
-        parts.push(`(osnova: <strong>${data.found_lemma}</strong>)`);
-    } else if (!isInflected) {
-        // Base form descriptions
+        // Only show lemma if it's different from the searched word
+        if (isInflected) {
+            parts.push(`(osnova: <strong>${data.found_lemma}</strong>)`);
+        }
+    } else if (!isInflected && !data.form_info) {
+        // Base form descriptions (only if no form_info)
         if (data.pos === 'noun') {
             parts.push('u nominativu jednine');
         } else if (data.pos === 'verb') {

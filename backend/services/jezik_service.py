@@ -275,6 +275,70 @@ class JezikService:
             print(f"Error identifying form for '{word}': {e}")
             return None
     
+    def find_matching_forms(self, lemma: str, word: str) -> List[str]:
+        """Find all morphological forms that match the given word.
+        
+        Args:
+            lemma: The lemma to look up
+            word: The word form to match (without accents)
+        
+        Returns:
+            List of form labels (e.g., ['sg nom', 'pl gen'])
+        """
+        if not self.available:
+            return []
+        
+        try:
+            result = lookup(lemma)
+            if not result or len(result) == 0:
+                return []
+            
+            table = result[0]
+            word_clean = self._remove_accents(word.lower())
+            matching_labels = []
+            
+            for label, forms in table:
+                for form in forms:
+                    form_clean = self._remove_accents(form.lower())
+                    if form_clean == word_clean:
+                        matching_labels.append(label.strip())
+                        break
+            
+            return matching_labels
+        except Exception as e:
+            print(f"Error finding matching forms for '{word}': {e}")
+            return []
+    
+    def get_accented_form(self, lemma: str, label: str) -> Optional[str]:
+        """Get the accented form for a specific morphological label.
+        
+        Args:
+            lemma: The lemma to look up
+            label: The morphological label (e.g., 'sg nom', 'pl gen')
+        
+        Returns:
+            The accented form or None
+        """
+        if not self.available:
+            return None
+        
+        try:
+            result = lookup(lemma)
+            if not result or len(result) == 0:
+                return None
+            
+            table = result[0]
+            label_clean = label.strip()
+            
+            for table_label, forms in table:
+                if table_label.strip() == label_clean:
+                    return forms[0] if forms else None
+            
+            return None
+        except Exception as e:
+            print(f"Error getting accented form for '{lemma}' ({label}): {e}")
+            return None
+    
     def _remove_accents(self, text: str) -> str:
         """Remove accent marks from text."""
         import unicodedata
