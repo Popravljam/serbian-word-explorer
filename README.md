@@ -1,22 +1,40 @@
-# Serbian Word Explorer 
+# Serbian Word Explorer
 
 A comprehensive web application for exploring Serbian words with detailed morphological information, accent patterns, and frequency data.
 
+**🌐 Live at:** [https://saptac.online/recnik/](https://saptac.online/recnik/)
+
 ## Features
 
-- ✅ **Full morphological paradigms** - All case forms for nouns, conjugations for verbs
-- ✅ **Accent information** - Precise pitch accent marking from jezik database
+- ✅ **Full morphological paradigms** - All case forms for nouns, conjugations for verbs with precise accent marking
+- ✅ **Accent information** - Precise pitch accent marking from jezik database (~3,000 lemmas)
+- ✅ **Etymology** - Word origins from Serbian Wiktionary
+- ✅ **Definitions** - Word meanings from Serbian Wiktionary  
 - ✅ **Word validation** - Check if a word exists (2.8M word database)
-- ✅ **Frequency data** - See how common a word is
-- ✅ **Multi-source data** - Combines jezik, spisak-srpskih-reci, and frequency corpus
+- ✅ **Frequency data** - See how common a word is (2.8M word forms)
+- ✅ **Multi-source data** - Combines jezik, spisak-srpskih-reci, inflection-sr, and Wiktionary
+- ✅ **Clean, responsive interface** - Works on desktop and mobile devices
 
 ## Data Sources
 
-1. **[jezik](https://github.com/Zabolekar/jezik)** - Morphology with detailed accent information (~12K lemmas)
+1. **[jezik](https://github.com/Zabolekar/jezik)** - Morphology with detailed accent information (~3K lemmas)
 2. **[spisak-srpskih-reci](https://github.com/turanjanin/spisak-srpskih-reci)** - Serbian word list (2.8M words)
 3. **[inflection-sr](https://github.com/nciric/inflection-sr)** - Word frequency data
+4. **[Serbian Wiktionary](https://sr.wiktionary.org/)** - Etymology and definitions
 
-## Setup
+## Usage
+
+Visit [https://saptac.online/recnik/](https://saptac.online/recnik/) and:
+
+1. Type a Serbian word in Cyrillic (e.g., `школа`, `човек`, `добар`)
+2. Press Enter or click "Претражи"
+3. View comprehensive information:
+   - Part of speech and grammatical gender
+   - Full declension/conjugation table with accent marks
+   - Word frequency ranking
+   - Existence validation
+
+## Local Development
 
 ### Prerequisites
 
@@ -47,51 +65,37 @@ The project expects these repositories to be in the parent directory:
 
 If they're not already cloned, they should be there from earlier steps.
 
-## Running the Application
+## Running Locally
 
-### 1. Start the Backend
+### Quick Start
 
 ```bash
+./run.sh
+```
+
+This starts both backend (port 8000) and frontend (port 3000).
+
+### Manual Start
+
+**Backend:**
+```bash
 cd backend
-source venv/bin/activate  # Activate virtual environment
+source venv/bin/activate
 python main.py
 ```
 
-The API will start on `http://localhost:8000`
-
-### 2. Start the Frontend
-
-Simply open the HTML file in a browser:
-
-```bash
-cd frontend
-open index.html  # macOS
-# or
-xdg-open index.html  # Linux
-# or just double-click index.html in file explorer
-```
-
-Or use a simple HTTP server:
-
+**Frontend:**
 ```bash
 cd frontend
 python3 -m http.server 3000
-# Then open http://localhost:3000 in browser
 ```
 
-## Usage
-
-1. Open the web interface
-2. Type a Serbian word in Cyrillic (e.g., `школа`, `човек`, `добар`)
-3. Press Enter or click "Претражи"
-4. View comprehensive word information:
-   - Part of speech
-   - Gender (for nouns)
-   - Full declension/conjugation table with accents
-   - Word frequency ranking
-   - Validation status
+Then open http://localhost:3000
 
 ## API Endpoints
+
+**Production:** `https://saptac.online/api/`  
+**Local:** `http://localhost:8000/api/`
 
 ### `GET /api/word/{word}`
 
@@ -99,7 +103,7 @@ Get complete information about a word.
 
 **Example:**
 ```bash
-curl http://localhost:8000/api/word/школа
+curl https://saptac.online/api/word/школа
 ```
 
 **Response:**
@@ -129,6 +133,10 @@ curl http://localhost:8000/api/word/школа
 
 Get a random word from the jezik database.
 
+### `GET /health`
+
+Health check endpoint.
+
 ## Project Structure
 
 ```
@@ -146,18 +154,31 @@ serbian-word-explorer/
 └── README.md
 ```
 
+## Deployment
+
+The application is deployed on a VPS server at **saptac.online**.
+
+### Architecture
+- **Frontend:** Static HTML/JS served via Nginx
+- **Backend:** FastAPI service running as systemd service
+- **Data:** ~12K lemmas (jezik) + 2.8M words (spisak-srpskih-reci + inflection-sr)
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment documentation.
+
 ## Future Enhancements
 
 - [ ] IPA pronunciation generation
-- [ ] Definitions from Wiktionary
-- [ ] Etymology information
+- [x] Definitions from Wiktionary
+- [x] Etymology information
 - [ ] Example sentences
-- [ ] Synonyms/antonyms
+- [ ] Synonyms/antonyms (partially available via definitions)
 - [ ] Latin/Cyrillic toggle
 - [ ] Ekavian/Ijekavian variants
 - [ ] Audio pronunciation
-- [ ] Database caching for performance
+- [ ] Redis caching for performance
 - [ ] User contributions
+- [ ] Search history
+- [ ] Expand Wiktionary coverage (currently ~3K lemmas)
 
 ## License
 
